@@ -1,3 +1,114 @@
-# Project Title 
+# Хранилище тэгов
 
-Place there all basic information needed for anyone to get started with your repository
+Данный документ содержит описание работы и информацию о развертке микросервиса-обертки для хранилища тэгов для мероприятий.
+
+Название сервиса: `tag_das`
+
+Структура сервиса:
+
+| Файл                       | Описание                                                          |
+| -------------------------- | ----------------------------------------------------------------- |
+| `tag_das.py`               | Код микросервиса                                                  |
+| `config.yml`               | Конфигурационный файл со строкой подключения к RabbitMQ и MongoDB |
+| `run.sh`                   | Файл для запуска сервиса из Docker контейнера                     |
+| `requirements.txt`         | Верхнеуровневые зависимости                                       |
+| `requirements.lock`        | Все зависимости (`pip freeze`)                                    |
+| `Dockerfile`               | Описание сборки контейнера сервиса                                |
+| `docker-compose.yml`       | Изолированная развертка сервиса вместе с (RabbitMQ, MongoDB)      |
+| `docker-compose.local.yml` | Развертка зависимостей для дебаггинга (RabbitMQ, MongoDB)         |
+| `README.md`                | Описание микросервиса                                             |
+
+## API
+
+### RPC
+
+Получить тэги:
+
+```bat
+n.rpc.tag_das.get_tags()
+
+Args: nothing
+Returns: list of tags
+```
+
+Получить тэги c разбивкой по страницам:
+
+```bat
+n.rpc.tag_das.get_tags_by_page(page)
+
+Args: page - number of the current page
+Return: list of tags
+```
+
+Получить тэги по псевдониму:
+
+```bat
+n.rpc.tag_das.get_tags_by_alias(alias)
+
+Args: alias (string)
+Returns: list of tags
+```
+
+### HTTP
+
+Загрузить тэги с хабра:
+
+```rst
+GET http://localhost:8000/tags/upload HTTP/1.1
+```
+
+Получить тэги:
+
+```rst
+GET http://localhost:8000/tags HTTP/1.1
+```
+
+Получить тэги c разбивкой по страницам:
+
+```rst
+GET http://localhost:8000/tags/<int:page> HTTP/1.1
+```
+
+Получить тэги по псевдониму:
+
+```rst
+GET http://localhost:8000/tag/<string:alias> HTTP/1.1
+```
+
+## Развертывание и запуск
+
+### Локальный запуск
+
+Для локального запуска микросервиса требуется запустить контейнер с RabbitMQ и MongoDB. Для этого есть специальный `docker-compose.local.yml`. Чтобы запустить:
+
+```bat
+docker-compose --file docker-compose.local.yml up -d
+```
+
+Затем из папки микросервиса вызвать
+
+```bat
+nameko run tag_das
+```
+
+Для проверки `rpc` запустите в командной строке:
+
+```bat
+nameko shell
+```
+
+После чего откроется интерактивная Python среда. Обратитесь к сервису одной из команд, представленных выше в разделе `rpc`
+
+### Запуск в контейнере
+
+Чтобы запустить микросервис в контейнере вызовите команду:
+
+```bat
+docker-compose up
+```
+
+> если вы не хотите просмотривать логи, добавьте флаг `-d` в конце
+
+Микросервис запустится вместе с RabbitMQ и MongoDB в контейнерах.
+
+> Во всех случаях запуска вместе с MongoDB также разворачивается mongo-express - инструмент, с помощью которого можно просматривать и изменять содержимое подключенной базы (подключение в контейнерах сконфигурировано и производится автоматически). Сервис хостится локально на порту 8081.
